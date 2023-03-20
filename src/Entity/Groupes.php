@@ -29,8 +29,18 @@ class Groupes
     private ?string $contact = null;
 
     #[ORM\ManyToOne(inversedBy: 'groupes')]
+    #[ORM\JoinColumn(onDelete:"CASCADE")]
     #[Groups(['getGroupes', 'getRegions'])]
     private ?Regions $regions = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $email = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $site = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $adresse = null;
 
     public function getId(): ?int
     {
@@ -81,6 +91,42 @@ class Groupes
     public function setRegions(?Regions $regions): self
     {
         $this->regions = $regions;
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function getSite(): ?string
+    {
+        return $this->site;
+    }
+
+    public function setSite(?string $site): self
+    {
+        $this->site = $site;
+
+        return $this;
+    }
+
+    public function getAdresse(): ?string
+    {
+        return $this->adresse;
+    }
+
+    public function setAdresse(?string $adresse): self
+    {
+        $this->adresse = $adresse;
 
         return $this;
     }
