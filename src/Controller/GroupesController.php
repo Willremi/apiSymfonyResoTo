@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class GroupesController extends AbstractController
 {
@@ -40,9 +41,19 @@ class GroupesController extends AbstractController
     }
 
     #[Route('/api/groupe', name: 'app_add_groupe', methods: ['POST'])]
-    public function createGroupe(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, RegionsRepository $regionsRepository): JsonResponse
+    public function createGroupe(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, RegionsRepository $regionsRepository, ValidatorInterface $validator): JsonResponse
     {
         $groupe = $serializer->deserialize($request->getContent(), Groupes::class, 'json');
+
+        //Vérification des erreurs
+        $errors = $validator->validate($groupe);
+
+        if($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
+        $em->persist($groupe);
+        $em->flush();
 
         // Récupération de l'ensemble des données envoyées sous forme de tableau
         $content = $request->toArray();
@@ -54,8 +65,6 @@ class GroupesController extends AbstractController
         // Si "find" ne trouve pas la région, alors null sera retourné.
         $groupe->setRegions($regionsRepository->find($idRegion));
 
-        $em->persist($groupe);
-        $em->flush();
 
         $jsonGroupe = $serializer->serialize($groupe, 'json', ['groups' => 'getGroupes']);
 
@@ -65,7 +74,7 @@ class GroupesController extends AbstractController
     }
 
     #[Route('/api/groupe/{id}', name: 'app_update_groupe', methods: ['PUT'])]
-    public function updateGroupe(Request $request, SerializerInterface $serializer, Groupes $currentGroupes, EntityManagerInterface $em, RegionsRepository $regionsRepository): JsonResponse
+    public function updateGroupe(Request $request, SerializerInterface $serializer, Groupes $currentGroupes, EntityManagerInterface $em, RegionsRepository $regionsRepository, ValidatorInterface $validator): JsonResponse
     {
         $updatedGroupe = $serializer->deserialize(
             $request->getContent(),
@@ -73,6 +82,14 @@ class GroupesController extends AbstractController
             'json',
             [AbstractNormalizer::OBJECT_TO_POPULATE => $currentGroupes]
         );
+
+        //Vérification des erreurs
+        $errors = $validator->validate($updatedGroupe);
+
+        if($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         $content = $request->toArray();
         $idRegion = $content['idRegion'] ?? -1;
         $updatedGroupe->setRegions($regionsRepository->find($idRegion));

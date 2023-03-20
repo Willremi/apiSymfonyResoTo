@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: RegionsRepository::class)]
 class Regions
@@ -19,6 +20,8 @@ class Regions
 
     #[ORM\Column(length: 255)]
     #[Groups(['getGroupes', 'getRegions'])]
+    #[Assert\NotBlank(message: "Le nom de la région est obligatoire")]
+    #[Assert\Length(min: 3, max: 255, minMessage: "Le nom doit faire au moins {{ limit }} caractères", maxMessage: "Le nom ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $name = null;
 
     #[ORM\OneToMany(mappedBy: 'regions', targetEntity: Groupes::class)]

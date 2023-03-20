@@ -6,6 +6,7 @@ use App\Repository\GroupesRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GroupesRepository::class)]
 class Groupes
@@ -18,6 +19,8 @@ class Groupes
 
     #[ORM\Column(length: 255)]
     #[Groups(['getGroupes', 'getRegions'])]
+    #[Assert\NotBlank(message: "Le nom du groupe est obligatoire")]
+    #[Assert\Length(min: 1, max: 255, minMessage: "Le nom doit faire au moins {{ limit }} caractères", maxMessage: "Le nom ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -26,6 +29,8 @@ class Groupes
 
     #[ORM\Column(length: 255)]
     #[Groups(['getGroupes', 'getRegions'])]
+    #[Assert\NotBlank(message: "Le nom du répresentant est obligatoire")]
+    #[Assert\Length(min: 1, max: 255, minMessage: "Le nom du représentant doit faire au moins {{ limit }} caractères", maxMessage: "Le titre ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $contact = null;
 
     #[ORM\ManyToOne(inversedBy: 'groupes')]

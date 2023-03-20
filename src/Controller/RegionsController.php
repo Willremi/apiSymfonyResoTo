@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegionsController extends AbstractController
 {
@@ -32,9 +33,17 @@ class RegionsController extends AbstractController
     }
 
     #[Route('/api/region', name: 'app_add_region', methods: ['POST'])]
-    public function createRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator): JsonResponse
+    public function createRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
     {
         $region = $serializer->deserialize($request->getContent(), Regions::class, 'json');
+
+        //Vérification des erreurs
+        $errors = $validator->validate($region);
+
+        if($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         $em->persist($region);
         $em->flush();
 
@@ -45,9 +54,17 @@ class RegionsController extends AbstractController
     }
 
     #[Route('/api/region/{id}', name: 'app_update_region', methods: ['PUT'])]
-    public function updateRegion(Request $request, SerializerInterface $serializer, Regions $currentRegions, EntityManagerInterface $em): JsonResponse
+    public function updateRegion(Request $request, SerializerInterface $serializer, Regions $currentRegions, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $updatedRegion = $serializer->deserialize($request->getContent(), Regions::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentRegions]);
+
+        //Vérification des erreurs
+        $errors = $validator->validate($updatedRegion);
+
+        if($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
         $em->persist($updatedRegion);
         $em->flush();
 
