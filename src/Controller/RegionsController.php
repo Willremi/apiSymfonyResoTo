@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Regions;
 use App\Repository\RegionsRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -42,7 +43,8 @@ class RegionsController extends AbstractController
         $jsonRegionsList = $cache->get($idCache, function (ItemInterface $item) use ($regionsRepository, $page, $limit, $serializer) {
             $item->tag("groupesCache");
             $regionsList = $regionsRepository->findAllWithPagination($page, $limit);
-            return $serializer->serialize($regionsList, 'json', ['groups' => 'getRegions']);
+            $context = SerializationContext::create()->setGroups(['getRegions']);
+            return $serializer->serialize($regionsList, 'json', $context);
         });
 
         return new JsonResponse($jsonRegionsList, Response::HTTP_OK, [], true);
@@ -58,7 +60,8 @@ class RegionsController extends AbstractController
     #[Route('/api/region/{id}', name: 'app_detail_region', methods: ['GET'])]
     public function getDetailRegion(Regions $regions, SerializerInterface $serializer): JsonResponse
     {
-        $jsonRegion = $serializer->serialize($regions, 'json', ['groups'=> 'getRegions']);
+        $context = SerializationContext::create()->setGroups(['getRegions']);
+        $jsonRegion = $serializer->serialize($regions, 'json', $context);
         return new JsonResponse($jsonRegion, Response::HTTP_OK, [], true);
     }
 
@@ -91,7 +94,9 @@ class RegionsController extends AbstractController
         // Vider le cache
         $cache->invalidateTags(['groupesCache']);
 
-        $jsonRegion = $serializer->serialize($region, 'json', ['groups' => 'getRegions']);
+        $context = SerializationContext::create()->setGroups(['getRegions']);
+
+        $jsonRegion = $serializer->serialize($region, 'json', $context);
         $location = $urlGenerator->generate('app_detail_region', ['id'=> $region->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonRegion, Response::HTTP_CREATED, ['Location' => $location], true);
@@ -111,16 +116,18 @@ class RegionsController extends AbstractController
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour éditer une région")]
     public function updateRegion(Request $request, SerializerInterface $serializer, Regions $currentRegions, EntityManagerInterface $em, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
-        $updatedRegion = $serializer->deserialize($request->getContent(), Regions::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentRegions]);
+        $newRegions = $serializer->deserialize($request->getContent(), Regions::class, 'json');
+
+        $currentRegions->setName($newRegions->getName());
 
         //Vérification des erreurs
-        $errors = $validator->validate($updatedRegion);
+        $errors = $validator->validate($currentRegions);
 
         if($errors->count() > 0) {
             return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
         }
 
-        $em->persist($updatedRegion);
+        $em->persist($currentRegions);
         $em->flush();
 
         // Vide le cache
