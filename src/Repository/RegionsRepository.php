@@ -21,6 +21,16 @@ class RegionsRepository extends ServiceEntityRepository
         parent::__construct($registry, Regions::class);
     }
 
+    public function findAllWithPagination($page, $limit)
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $query = $qb->getQuery();
+        return $query->getResult();
+    }
+
     public function save(Regions $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);

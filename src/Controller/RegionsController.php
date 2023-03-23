@@ -15,6 +15,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class RegionsController extends AbstractController
 {
@@ -26,10 +28,23 @@ class RegionsController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/api/regions', name: 'app_regions', methods: ['GET'])]
-    public function getRegionsList(RegionsRepository $regionsRepository, SerializerInterface $serializer): JsonResponse
+    public function getRegionsList(RegionsRepository $regionsRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
-        $regionsList = $regionsRepository->findAll();
-        $jsonRegionsList = $serializer->serialize($regionsList, 'json', ['groups' => 'getRegions']);
+        // $regionsList = $regionsRepository->findAll();
+        // $jsonRegionsList = $serializer->serialize($regionsList, 'json', ['groups' => 'getRegions']);
+        // return new JsonResponse($jsonRegionsList, Response::HTTP_OK, [], true);
+
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 1);
+
+        $idCache = "getRegionsList-" . $page . "-" . $limit;
+
+        $jsonRegionsList = $cache->get($idCache, function (ItemInterface $item) use ($regionsRepository, $page, $limit, $serializer) {
+            $item->tag("groupesCache");
+            $regionsList = $regionsRepository->findAllWithPagination($page, $limit);
+            return $serializer->serialize($regionsList, 'json', ['groups' => 'getRegions']);
+        });
+
         return new JsonResponse($jsonRegionsList, Response::HTTP_OK, [], true);
     }
 
@@ -59,7 +74,7 @@ class RegionsController extends AbstractController
      */
     #[Route('/api/region', name: 'app_add_region', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour créer une région")]
-    public function createRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator): JsonResponse
+    public function createRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
         $region = $serializer->deserialize($request->getContent(), Regions::class, 'json');
 
@@ -72,6 +87,9 @@ class RegionsController extends AbstractController
 
         $em->persist($region);
         $em->flush();
+
+        // Vider le cache
+        $cache->invalidateTags(['groupesCache']);
 
         $jsonRegion = $serializer->serialize($region, 'json', ['groups' => 'getRegions']);
         $location = $urlGenerator->generate('app_detail_region', ['id'=> $region->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
@@ -90,7 +108,8 @@ class RegionsController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/api/region/{id}', name: 'app_update_region', methods: ['PUT'])]
-    public function updateRegion(Request $request, SerializerInterface $serializer, Regions $currentRegions, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
+    #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour éditer une région")]
+    public function updateRegion(Request $request, SerializerInterface $serializer, Regions $currentRegions, EntityManagerInterface $em, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
         $updatedRegion = $serializer->deserialize($request->getContent(), Regions::class, 'json', [AbstractNormalizer::OBJECT_TO_POPULATE => $currentRegions]);
 
@@ -104,6 +123,9 @@ class RegionsController extends AbstractController
         $em->persist($updatedRegion);
         $em->flush();
 
+        // Vide le cache
+        $cache->invalidateTags(['groupesCache']);
+
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -115,10 +137,14 @@ class RegionsController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/api/region/{id}', name: 'app_delete_region', methods: ['DELETE'])]
-    public function deleteGroupe(Regions $regions, EntityManagerInterface $em): JsonResponse
+    #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour supprimer une région")]
+    public function deleteGroupe(Regions $regions, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {
         $em->remove($regions);
         $em->flush();
+
+        // Vide le cache
+        $cache->invalidateTags(['groupesCache']);
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }

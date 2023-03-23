@@ -16,6 +16,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 class GroupesController extends AbstractController
 {
@@ -27,14 +29,31 @@ class GroupesController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/api/groupes', name: 'app_groupes', methods: ['GET'])]
-    public function getGroupesList(GroupesRepository $groupesRepository, SerializerInterface $serializer): JsonResponse
+    public function getGroupesList(GroupesRepository $groupesRepository, SerializerInterface $serializer, Request $request, TagAwareCacheInterface $cache): JsonResponse
     {
         // return $this->json([
         //     'message' => 'Welcome to your new controller!',
         //     'path' => 'src/Controller/GroupesController.php',
         // ]);
-        $groupesList = $groupesRepository->findAll();
-        $jsonGroupesList = $serializer->serialize($groupesList, 'json', ['groups' => 'getGroupes']);
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+
+        $idCache = "getGroupesList-" . $page . "-" . $limit;
+        // $groupesList = $groupesRepository->findAll();
+        // $groupesList = $groupesRepository->findAllWithPagination($page, $limit);
+        // $groupesList = $cache->get($idCache, function(ItemInterface $item) use ($groupesRepository, $page, $limit) {
+        //     $item->tag("groupesCache");
+        //     return $groupesRepository->findAllWithPagination($page, $limit);
+        // });
+        
+        $jsonGroupesList = $cache->get($idCache, function (ItemInterface $item) use ($groupesRepository, $page, $limit, $serializer) {
+            $item->tag("groupesCache");
+            $groupesList = $groupesRepository->findAllWithPagination($page, $limit);
+            return $serializer->serialize($groupesList, 'json', ['groups' => 'getGroupes']);
+        });
+        
+        
+        // $jsonGroupesList = $serializer->serialize($groupesList, 'json', ['groups' => 'getGroupes']);
 
         return new JsonResponse($jsonGroupesList, Response::HTTP_OK, [], true);
     }
@@ -68,7 +87,7 @@ class GroupesController extends AbstractController
      */
     #[Route('/api/groupe', name: 'app_add_groupe', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour créer un groupe")]
-    public function createGroupe(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, RegionsRepository $regionsRepository, ValidatorInterface $validator): JsonResponse
+    public function createGroupe(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, RegionsRepository $regionsRepository, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
         $groupe = $serializer->deserialize($request->getContent(), Groupes::class, 'json');
 
@@ -81,6 +100,9 @@ class GroupesController extends AbstractController
 
         $em->persist($groupe);
         $em->flush();
+
+        // Vide le cache
+        $cache->invalidateTags(['groupesCache']);
 
         // Récupération de l'ensemble des données envoyées sous forme de tableau
         $content = $request->toArray();
@@ -112,7 +134,8 @@ class GroupesController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/api/groupe/{id}', name: 'app_update_groupe', methods: ['PUT'])]
-    public function updateGroupe(Request $request, SerializerInterface $serializer, Groupes $currentGroupes, EntityManagerInterface $em, RegionsRepository $regionsRepository, ValidatorInterface $validator): JsonResponse
+    #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour éditer un groupe")]
+    public function updateGroupe(Request $request, SerializerInterface $serializer, Groupes $currentGroupes, EntityManagerInterface $em, RegionsRepository $regionsRepository, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
         $updatedGroupe = $serializer->deserialize(
             $request->getContent(),
@@ -135,6 +158,9 @@ class GroupesController extends AbstractController
         $em->persist($updatedGroupe);
         $em->flush();
 
+        // Vide le cache
+        $cache->invalidateTags(['groupesCache']);
+        
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -146,11 +172,26 @@ class GroupesController extends AbstractController
      * @return JsonResponse
      */
     #[Route('/api/groupe/{id}', name: 'app_delete_groupe', methods: ['DELETE'])]
-    public function deleteGroupe(Groupes $groupes, EntityManagerInterface $em): JsonResponse
+    #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour supprimer un groupe")]
+    public function deleteGroupe(Groupes $groupes, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {
+        $cache->invalidateTags(["groupesCache"]);
         $em->remove($groupes);
         $em->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Méthode permettant de vider le cache
+     *
+     * @param TagAwareCacheInterface $cache
+     * @return void
+     */
+    #[Route('/api/groupes/clearCache', name:"clearCache", methods: ['GET'])]
+    public function clearCache(TagAwareCacheInterface $cache)
+    {
+        $cache->invalidateTags(['groupesCache']);
+        return new JsonResponse("Cache Vidé", JsonResponse::HTTP_OK);
     }
 }

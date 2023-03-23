@@ -21,6 +21,17 @@ class GroupesRepository extends ServiceEntityRepository
         parent::__construct($registry, Groupes::class);
     }
 
+    public function findAllWithPagination($page, $limit)
+    {
+        $qb = $this->createQueryBuilder('b')
+                ->setFirstResult(($page - 1) * $limit)
+                ->setMaxResults($limit);
+        // return $qb->getQuery()->getResult();
+        $query = $qb->getQuery();
+        $query->setFetchMode(Groupes::class, "regions", \Doctrine\ORM\Mapping\ClassMetadata::FETCH_EAGER);
+        return $query->getResult();
+    }
+
     public function save(Groupes $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
