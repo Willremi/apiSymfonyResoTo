@@ -75,7 +75,7 @@ class RegionsController extends AbstractController
      * @param ValidatorInterface $validator
      * @return JsonResponse
      */
-    #[Route('/api/region', name: 'app_add_region', methods: ['POST'])]
+    #[Route('/api/region/add', name: 'app_add_region', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour créer une région")]
     public function createRegion(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
@@ -112,7 +112,7 @@ class RegionsController extends AbstractController
      * @param ValidatorInterface $validator
      * @return JsonResponse
      */
-    #[Route('/api/region/{id}', name: 'app_update_region', methods: ['PUT'])]
+    #[Route('/api/region/edit/{id}', name: 'app_update_region', methods: ['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour éditer une région")]
     public function updateRegion(Request $request, SerializerInterface $serializer, Regions $currentRegions, EntityManagerInterface $em, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
@@ -143,7 +143,7 @@ class RegionsController extends AbstractController
      * @param EntityManagerInterface $em
      * @return JsonResponse
      */
-    #[Route('/api/region/{id}', name: 'app_delete_region', methods: ['DELETE'])]
+    #[Route('/api/region/delete/{id}', name: 'app_delete_region', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour supprimer une région")]
     public function deleteGroupe(Regions $regions, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {

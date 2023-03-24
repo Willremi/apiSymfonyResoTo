@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -50,7 +49,7 @@ class GroupesController extends AbstractController
             return $serializer->serialize($groupesList, 'json', $context);
         });
         
-        
+        // dd($jsonGroupesList);
         // $jsonGroupesList = $serializer->serialize($groupesList, 'json', ['groups' => 'getGroupes']);
 
         return new JsonResponse($jsonGroupesList, Response::HTTP_OK, [], true);
@@ -84,7 +83,7 @@ class GroupesController extends AbstractController
      * @param ValidatorInterface $validator
      * @return JsonResponse
      */
-    #[Route('/api/groupe', name: 'app_add_groupe', methods: ['POST'])]
+    #[Route('/api/groupe/add', name: 'app_add_groupe', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour créer un groupe")]
     public function createGroupe(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, UrlGeneratorInterface $urlGenerator, RegionsRepository $regionsRepository, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
@@ -134,7 +133,7 @@ class GroupesController extends AbstractController
      * @param ValidatorInterface $validator
      * @return JsonResponse
      */
-    #[Route('/api/groupe/{id}', name: 'app_update_groupe', methods: ['PUT'])]
+    #[Route('/api/groupe/edit/{id}', name: 'app_update_groupe', methods: ['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour éditer un groupe")]
     public function updateGroupe(Request $request, SerializerInterface $serializer, Groupes $currentGroupes, EntityManagerInterface $em, RegionsRepository $regionsRepository, ValidatorInterface $validator, TagAwareCacheInterface $cache): JsonResponse
     {
@@ -144,12 +143,7 @@ class GroupesController extends AbstractController
         $currentGroupes->setName($newGroupes->getName());
         $currentGroupes->setDescription($newGroupes->getDescription());
         $currentGroupes->setContact($newGroupes->getContact());
-        $currentGroupes->setContact($newGroupes->getContact());
         $currentGroupes->setEmail($newGroupes->getEmail());
-        $currentGroupes->setEmail($newGroupes->getEmail());
-        $currentGroupes->setSite($newGroupes->getSite());
-        $currentGroupes->setSite($newGroupes->getSite());
-        $currentGroupes->setAdresse($newGroupes->getAdresse());
         //Vérification des erreurs
         $errors = $validator->validate($currentGroupes);
 
@@ -177,7 +171,7 @@ class GroupesController extends AbstractController
      * @param EntityManagerInterface $em
      * @return JsonResponse
      */
-    #[Route('/api/groupe/{id}', name: 'app_delete_groupe', methods: ['DELETE'])]
+    #[Route('/api/groupe/delete/{id}', name: 'app_delete_groupe', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: "Vous n'avez pas les droits suffisants pour supprimer un groupe")]
     public function deleteGroupe(Groupes $groupes, EntityManagerInterface $em, TagAwareCacheInterface $cache): JsonResponse
     {

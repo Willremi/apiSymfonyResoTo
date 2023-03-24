@@ -7,7 +7,36 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "app_detail_groupe",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getGroupes")
+ * )
+ *
+ *  * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "app_delete_groupe",
+ *          parameters = { "id" = "expr(object.getId())" },
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getGroupes", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
+ * )
+ * 
+ * @Hateoas\Relation(
+ *      "update",
+ *      href = @Hateoas\Route(
+ *          "app_update_groupe",
+ *          parameters = { "id" = "expr(object.getId())" },
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="getGroupes", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
+ * )
+ */
 #[ORM\Entity(repositoryClass: GroupesRepository::class)]
 class Groupes
 {
@@ -30,7 +59,7 @@ class Groupes
     #[ORM\Column(length: 255)]
     #[Groups(['getGroupes', 'getRegions'])]
     #[Assert\NotBlank(message: "Le nom du répresentant est obligatoire")]
-    #[Assert\Length(min: 1, max: 255, minMessage: "Le nom du représentant doit faire au moins {{ limit }} caractères", maxMessage: "Le titre ne peut pas faire plus de {{ limit }} caractères")]
+    #[Assert\Length(min: 1, max: 255, minMessage: "Le nom du représentant doit faire au moins {{ limit }} caractères", maxMessage: "Le nom du représentant ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $contact = null;
 
     #[ORM\ManyToOne(inversedBy: 'groupes')]
@@ -39,13 +68,9 @@ class Groupes
     private ?Regions $regions = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['getGroupes', 'getRegions'])]
+    #[Assert\Length(min: 1, max: 255, minMessage: "L'email du groupe doit faire au moins {{ limit }} caractères", maxMessage: "L'email ne peut pas faire plus de {{ limit }} caractères")]
     private ?string $email = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $site = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $adresse = null;
 
     public function getId(): ?int
     {
@@ -112,27 +137,5 @@ class Groupes
         return $this;
     }
 
-    public function getSite(): ?string
-    {
-        return $this->site;
-    }
-
-    public function setSite(?string $site): self
-    {
-        $this->site = $site;
-
-        return $this;
-    }
-
-    public function getAdresse(): ?string
-    {
-        return $this->adresse;
-    }
-
-    public function setAdresse(?string $adresse): self
-    {
-        $this->adresse = $adresse;
-
-        return $this;
-    }
+    
 }

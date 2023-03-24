@@ -28,7 +28,7 @@ class GroupesRepository extends ServiceEntityRepository
                 ->setMaxResults($limit);
         // return $qb->getQuery()->getResult();
         $query = $qb->getQuery();
-        $query->setFetchMode(Groupes::class, "regions", \Doctrine\ORM\Mapping\ClassMetadata::FETCH_EAGER);
+        // $query->setFetchMode(Groupes::class, "regions", \Doctrine\ORM\Mapping\ClassMetadata::FETCH_EAGER);
         return $query->getResult();
     }
 

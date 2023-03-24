@@ -55,6 +55,7 @@ class AppFixtures extends Fixture
             $groupe->setContact('Contact n°' . $i);
             // Liaison du groupe à une région pris au hasard dans le tableau des régions
             $groupe->setRegions($listRegion[array_rand($listRegion)]);
+            $groupe->setEmail('Email n°' . $i);
             $manager->persist($groupe);
         }
 
