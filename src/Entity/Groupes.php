@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation\Since;
 
 /**
  * @Hateoas\Relation(
@@ -70,6 +71,7 @@ class Groupes
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['getGroupes', 'getRegions'])]
     #[Assert\Length(min: 1, max: 255, minMessage: "L'email du groupe doit faire au moins {{ limit }} caractères", maxMessage: "L'email ne peut pas faire plus de {{ limit }} caractères")]
+    #[Since("2.0")]
     private ?string $email = null;
 
     public function getId(): ?int

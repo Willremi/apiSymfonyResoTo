@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Groupes;
 use App\Repository\GroupesRepository;
 use App\Repository\RegionsRepository;
+use App\Services\VersioningService;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -65,9 +66,12 @@ class GroupesController extends AbstractController
     #[Route('/api/groupe/{id}', name: 'app_detail_groupe', methods: ['GET'])]
     public function getDetailGroupe(
         Groupes $groupes,
-        SerializerInterface $serializer
+        SerializerInterface $serializer, 
+        VersioningService $versioningService
     ): JsonResponse {
+        $version = $versioningService->getVersion();
         $context = SerializationContext::create()->setGroups(['getGroupes']);
+        $context->setVersion($version);
         $jsonGroupe = $serializer->serialize($groupes, 'json', $context);
         return new JsonResponse($jsonGroupe, Response::HTTP_OK, [], true);
     }
