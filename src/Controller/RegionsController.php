@@ -13,16 +13,29 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 
 class RegionsController extends AbstractController
 {
     /**
      * Cette méthode permet de récupérer l'ensemble des régions.
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Retourne l'ensemble des régions",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Regions::class, groups={"getRégions"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Régions")
      *
      * @param RegionsRepository $regionsRepository
      * @param SerializerInterface $serializer
@@ -52,6 +65,17 @@ class RegionsController extends AbstractController
 
     /**
      * Cette méthode permet de récupérer une région en particulier en fonction de son id.
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Retourne les détails d'une région",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Regions::class, groups={"getRégions"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Régions")
      *
      * @param Regions $regions
      * @param SerializerInterface $serializer
@@ -67,6 +91,17 @@ class RegionsController extends AbstractController
 
     /**
      * Cette méthode permet de créer une nouvelle région.
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="ajoute une région",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Regions::class, groups={"getRégions"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Régions")
      *
      * @param Request $request
      * @param SerializerInterface $serializer
@@ -104,6 +139,17 @@ class RegionsController extends AbstractController
 
     /**
      * Cette méthode permet de mettre à jour une région
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Edite les détails d'une région",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Regions::class, groups={"getRégions"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Régions")
      *
      * @param Request $request
      * @param SerializerInterface $serializer
@@ -138,6 +184,17 @@ class RegionsController extends AbstractController
 
     /**
      * Cette méthode permet de supprimer une région
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Supprime une région",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Regions::class, groups={"getRégions"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Régions")
      *
      * @param Regions $regions
      * @param EntityManagerInterface $em

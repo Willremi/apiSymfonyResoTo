@@ -19,11 +19,37 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 
 class GroupesController extends AbstractController
 {
     /**
      * Cette méthode permet de récupérer l'ensemble des groupes
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Retourne la liste des groupes",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Groupes::class, groups={"getGroupes"}))
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="La page que l'on veut récupérer",
+     *     @OA\Schema(type="int")
+     * )
+     *
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="Le nombre d'éléments que l'on veut récupérer",
+     *     @OA\Schema(type="int")
+     * )
+     * @OA\Tag(name="Groupes")
      *
      * @param GroupesRepository $groupesRepository
      * @param SerializerInterface $serializer
@@ -58,6 +84,17 @@ class GroupesController extends AbstractController
 
     /**
      * Cette méthode permet de récupérer un groupe particulier en fonction de son id
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Retourne les détails d'un groupe",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Groupes::class, groups={"getGroupes"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Groupes")
      *
      * @param Groupes $groupes
      * @param SerializerInterface $serializer
@@ -78,6 +115,17 @@ class GroupesController extends AbstractController
 
     /**
      * Cette méthode permet de créer un groupe
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Ajoute un groupe",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Groupes::class, groups={"getGroupes"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Groupes")
      *
      * @param Request $request
      * @param SerializerInterface $serializer
@@ -128,6 +176,17 @@ class GroupesController extends AbstractController
 
     /**
      * Cette méthode permet de mettre à jour un groupe
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Edite les infos d'un groupe",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Groupes::class, groups={"getGroupes"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Groupes")
      *
      * @param Request $request
      * @param SerializerInterface $serializer
@@ -170,6 +229,17 @@ class GroupesController extends AbstractController
 
     /**
      * Cette méthode permet de supprimer un groupe
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Supprime un groupe",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Groupes::class, groups={"getGroupes"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Groupes")
      *
      * @param Groupes $groupes
      * @param EntityManagerInterface $em
@@ -188,6 +258,17 @@ class GroupesController extends AbstractController
 
     /**
      * Méthode permettant de vider le cache
+     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Vide le cache",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=Groupes::class, groups={"getGroupes"}))
+     *     )
+     * )
+     * 
+     * @OA\Tag(name="Groupes")
      *
      * @param TagAwareCacheInterface $cache
      * @return void
